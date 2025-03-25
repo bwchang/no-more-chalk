@@ -1,29 +1,15 @@
-import os
-from dotenv import load_dotenv
-import requests
-
-from entry import get_entries_from_api_response
+from api import get_group_entries, get_propositions
+from settings import CHALLENGE_ID, GROUP_ID
     
-load_dotenv()  # Load variables from .env file into the environment
-
-GROUP_ID = os.getenv("GROUP_ID")
-CHALLENGE_ID = os.getenv("CHALLENGE_ID")
-BASE_URL = "https://gambit-api.fantasy.espn.com/apis/v1"
-
 UNDECIDED = "UNDECIDED"
 CORRECT = "CORRECT"
 INCORRECT = "INCORRECT"
-
-
-def get_url():
-    """Returns the URL to fetch the group data for this challenge."""
-    return f"{BASE_URL}/challenges/{CHALLENGE_ID}/groups/{GROUP_ID}"
 
 def build_outcome_frequency(all_entries):
     """Returns a dictionary of outcome IDs and their frequency of being picked for each proposition."""
     outcome_frequency = {}
     for entry in all_entries:
-        for pick in entry.get_picks():
+        for pick in entry.picks:
             # If the proposition ID is not in the dictionary, add it
             if pick.proposition_id not in outcome_frequency:
                 outcome_frequency[pick.proposition_id] = {}
@@ -38,7 +24,7 @@ def build_outcome_frequency(all_entries):
             proposition[pick.outcome_picked_id] += 1
     return outcome_frequency
 
-def calculate_uniqueness_score(entry, outcome_frequency, entries_count):
+def calculate_uniqueness_score(entry, outcome_frequency, entries_count, all_propositions):
     """
     Returns the uniqueness score for an entry.
 
@@ -49,17 +35,27 @@ def calculate_uniqueness_score(entry, outcome_frequency, entries_count):
       and X is the number of entries that picked the same outcome as you.
     - For each invalid prediction you made, you receive (N-X)/2 points.
     """
-    score = 0
-    for pick in entry.get_picks():
+    score = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+    for pick in entry.picks:
         # Skip picks that are still undecided
-        if pick.get_outcome_picked_result() == UNDECIDED:
+        if pick.outcome_picked_result == UNDECIDED:
             continue
 
-        proposition = outcome_frequency.get(pick.get_proposition_id(), {})
-        outcome_frequency_for_proposition = proposition.get(pick.get_outcome_picked_id(), 0)
+        proposition = [prop for prop in all_propositions if prop.id == pick.proposition_id][0]
+        # Skip future rounds
+        if proposition.actual_outcome_ids is None or len(proposition.actual_outcome_ids) == 0:
+            continue
+
+        prop_frequencies = outcome_frequency.get(pick.proposition_id, {})
+        outcome_frequency_for_proposition = prop_frequencies.get(pick.outcome_picked_id, 0)
 
         # Calculate the score for the pick and add it to the entry's total score
-        score += entries_count - outcome_frequency_for_proposition
+        if pick.outcome_picked_id in proposition.actual_outcome_ids:
+            # The pick is valid
+            score[proposition.scoring_period_id] += entries_count - outcome_frequency_for_proposition
+        else:
+            # The pick is invalid
+            score[proposition.scoring_period_id] += (entries_count - outcome_frequency_for_proposition) / 2
     return score
 
 def run():
@@ -71,18 +67,26 @@ def run():
         print("CHALLENGE_ID is not set. Please define it in a .env file.")
         exit(1)
 
-    try:
-        api_response = requests.get(get_url()).json()
-    except Exception as e:
-        print(f"An error occurred fetching data from ESPN: {e}")
+    group_response = get_group_entries()
+    if not group_response["success"]:
+        print("An error occurred fetching data from ESPN.")
         exit(1)
 
-    all_entries = get_entries_from_api_response(api_response)
+    all_entries = group_response["data"]
     entries_count = len(all_entries)
 
     outcome_frequency = build_outcome_frequency(all_entries)
+
+    propositions_response = get_propositions()
+    if not propositions_response["success"]:
+        print("An error occurred fetching data from ESPN.")
+        exit(1)
+
+    all_propositions = sorted(propositions_response["data"], key=lambda proposition: (proposition.scoring_period_id, proposition.scoring_period_matchup_id))
+
     for entry in all_entries:
-        print(f"{entry}: {calculate_uniqueness_score(entry, outcome_frequency, entries_count)}")
+        score = calculate_uniqueness_score(entry, outcome_frequency, entries_count, all_propositions)
+        print(f"{entry}: {score[1]}+{score[2]}+{score[3]}+{score[4]}+{score[5]}+{score[6]} = {sum(score.values())}")
 
 if __name__ == "__main__":
     run()

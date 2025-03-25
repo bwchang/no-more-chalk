@@ -19,9 +19,6 @@ class Entry:
         self.username = username
         self.picks = picks
 
-    def get_picks(self):
-        return self.picks
-
     def __str__(self):
         return self.name
 

@@ -15,12 +15,3 @@ class Pick:
         self.proposition_id = proposition_id
         self.outcome_picked_id = outcome_picked_id
         self.outcome_picked_result = outcome_picked_result
-
-    def get_proposition_id(self):
-        return self.proposition_id
-
-    def get_outcome_picked_id(self):
-        return self.outcome_picked_id
-
-    def get_outcome_picked_result(self):
-        return self.outcome_picked_result
