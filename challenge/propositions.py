@@ -1,36 +1,3 @@
-def get_propositions_from_api_response(response):
-    """Returns a list of Proposition objects from the API response."""
-    propositions = []
-    for proposition in response:
-        id = proposition["id"]
-        name = proposition["name"]
-        scoring_period_id = proposition["scoringPeriodId"]
-        scoring_period_matchup_id = proposition["scoringPeriodMatchupId"]
-        status = proposition["status"]
-        actual_outcome_ids = proposition.get("actualOutcomeIds")
-        correct_outcome_id = proposition.get("correctOutcomes", [None])[0]
-        possible_outcomes = [
-            PossibleOutcome(
-                outcome["id"],
-                outcome["name"],
-                outcome["choiceCounters"][0]["percentage"],
-            )
-            for outcome in proposition["possibleOutcomes"]
-        ]
-        propositions.append(
-            Proposition(
-                id,
-                name,
-                scoring_period_id,
-                scoring_period_matchup_id,
-                status,
-                actual_outcome_ids,
-                correct_outcome_id,
-                possible_outcomes,
-            )
-        )
-    return propositions
-
 class Proposition:
     """Represents a matchup in the tournament."""
     def __init__(
