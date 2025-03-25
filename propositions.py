@@ -64,6 +64,12 @@ class Proposition:
             return None
         return [outcome for outcome in self.get_possible_outcomes() if outcome.id == self.correct_outcome_id][0]
 
+    def get_percentage_for_outcome(self, outcome_id):
+        outcome = [outcome for outcome in self.get_possible_outcomes() if outcome.id == outcome_id][0]
+        if outcome is None:
+            return 0.0
+        return outcome.percentage
+
     def __str__(self):
         res = f"Round {self.scoring_period_id} Game {self.scoring_period_matchup_id}: {self.name}"
         if self.status == "COMPLETE" and self.get_correct_outcome() is not None:

@@ -17,6 +17,13 @@ row_headers = [
     "R4 (group)",
     "R5 (group)",
     "R6 (group)",
+    "Total Score (global)",
+    "R1 (global)",
+    "R2 (global)",
+    "R3 (global)",
+    "R4 (global)",
+    "R5 (global)",
+    "R6 (global)",
 ]
 
 def build_outcome_frequency(all_entries):
@@ -38,17 +45,17 @@ def build_outcome_frequency(all_entries):
             proposition[pick.outcome_picked_id] += 1
     return outcome_frequency
 
-def calculate_uniqueness_score(entry, outcome_frequency, all_propositions):
+def calculate_group_uniqueness_score(entry, outcome_frequency, all_propositions):
     """
-    Returns the uniqueness score for an entry.
+    Returns the group uniqueness score for an entry.
 
-    The uniqueness score is calculated as follows:
+    The group uniqueness score is calculated as follows:
     - A valid prediction is defined as one where your predicted winner is playing in the matchup.
     - For each valid prediction you made, you receive 1/X points,
       where X is the number of entries that picked the same outcome as you.
     - For each invalid prediction you made, you receive 1/2X points.
     """
-    score = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0, 6: 0.0}
+    scores = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0, 6: 0.0}
     for pick in entry.picks:
         # Skip picks that are still undecided
         if pick.outcome_picked_result == UNDECIDED:
@@ -69,13 +76,51 @@ def calculate_uniqueness_score(entry, outcome_frequency, all_propositions):
             pick_score = pick_score / 2
 
         # Add the rounded score to the total score for the scoring period
-        score[proposition.scoring_period_id] += pick_score
+        scores[proposition.scoring_period_id] += pick_score
 
     # Round the total score to two decimal places
-    for key in score:
-        score[key] = round(score[key], 2)
+    for key in scores:
+        scores[key] = round(scores[key], 2)
 
-    return score
+    return scores
+
+def calculate_global_uniqueness_score(entry, all_propositions):
+    """
+    Returns the global uniqueness score for an entry.
+
+    The global uniqueness score is calculated as follows:
+    - A valid prediction is defined as one where your predicted winner is playing in the matchup.
+    - For each valid prediction you made, you receive 1-X points,
+      where X is the percentage of entries globally that picked the same outcome as you.
+    - For each invalid prediction you made, you receive (1-X)/2 points.
+    """
+    scores = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0, 6: 0.0}
+    for pick in entry.picks:
+        # Skip picks that are still undecided
+        if pick.outcome_picked_result == UNDECIDED:
+            continue
+
+        proposition = [prop for prop in all_propositions if prop.id == pick.proposition_id][0]
+        # Skip future rounds
+        if proposition.actual_outcome_ids is None or len(proposition.actual_outcome_ids) == 0:
+            continue
+
+        # Calculate the score for the pick
+        global_percentage_picked = proposition.get_percentage_for_outcome(pick.outcome_picked_id)
+        pick_score = 1 - global_percentage_picked
+        if pick.outcome_picked_id not in proposition.actual_outcome_ids:
+            # The pick is invalid
+            pick_score = pick_score / 2
+
+        # Add the rounded score to the total score for the scoring period
+        scores[proposition.scoring_period_id] += pick_score
+
+    # Round the total score to two decimal places
+    for key in scores:
+        scores[key] = round(scores[key], 2)
+
+    return scores
+
 
 def run():
     if GROUP_ID is None:
@@ -109,16 +154,24 @@ def run():
     output = [row_headers]
 
     for entry in all_entries:
-        score = calculate_uniqueness_score(entry, outcome_frequency, all_propositions)
+        group_score = calculate_group_uniqueness_score(entry, outcome_frequency, all_propositions)
+        global_score = calculate_global_uniqueness_score(entry, all_propositions)
         output.append([
             entry.name,
-            round(sum(score.values()), 2),
-            score[1],
-            score[2],
-            score[3],
-            score[4],
-            score[5],
-            score[6],
+            round(sum(group_score.values()), 2),
+            group_score[1],
+            group_score[2],
+            group_score[3],
+            group_score[4],
+            group_score[5],
+            group_score[6],
+            round(sum(global_score.values()), 2),
+            global_score[1],
+            global_score[2],
+            global_score[3],
+            global_score[4],
+            global_score[5],
+            global_score[6],
         ])
 
     with open(output_filename, "w", newline="") as f:
