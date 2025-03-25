@@ -2,6 +2,7 @@ UNDECIDED = "UNDECIDED"
 CORRECT = "CORRECT"
 INCORRECT = "INCORRECT"
 
+
 def build_outcome_frequency(all_entries):
     """Returns a dictionary of outcome IDs and their frequency of being picked for each proposition."""
     outcome_frequency = {}
@@ -21,6 +22,7 @@ def build_outcome_frequency(all_entries):
             proposition[pick.outcome_picked_id] += 1
     return outcome_frequency
 
+
 def calculate_group_uniqueness_score(entry, outcome_frequency, all_propositions):
     """
     Returns the group uniqueness score for an entry.
@@ -37,13 +39,20 @@ def calculate_group_uniqueness_score(entry, outcome_frequency, all_propositions)
         if pick.outcome_picked_result == UNDECIDED:
             continue
 
-        proposition = [prop for prop in all_propositions if prop.id == pick.proposition_id][0]
+        proposition = [
+            prop for prop in all_propositions if prop.id == pick.proposition_id
+        ][0]
         # Skip future rounds
-        if proposition.actual_outcome_ids is None or len(proposition.actual_outcome_ids) == 0:
+        if (
+            proposition.actual_outcome_ids is None
+            or len(proposition.actual_outcome_ids) == 0
+        ):
             continue
 
         prop_frequencies = outcome_frequency.get(pick.proposition_id, {})
-        outcome_frequency_for_proposition = prop_frequencies.get(pick.outcome_picked_id, 0)
+        outcome_frequency_for_proposition = prop_frequencies.get(
+            pick.outcome_picked_id, 0
+        )
 
         # Calculate the score for the pick
         pick_score = 1 / outcome_frequency_for_proposition
@@ -59,6 +68,7 @@ def calculate_group_uniqueness_score(entry, outcome_frequency, all_propositions)
         scores[key] = round(scores[key], 2)
 
     return scores
+
 
 def calculate_global_uniqueness_score(entry, all_propositions):
     """
@@ -76,13 +86,20 @@ def calculate_global_uniqueness_score(entry, all_propositions):
         if pick.outcome_picked_result == UNDECIDED:
             continue
 
-        proposition = [prop for prop in all_propositions if prop.id == pick.proposition_id][0]
+        proposition = [
+            prop for prop in all_propositions if prop.id == pick.proposition_id
+        ][0]
         # Skip future rounds
-        if proposition.actual_outcome_ids is None or len(proposition.actual_outcome_ids) == 0:
+        if (
+            proposition.actual_outcome_ids is None
+            or len(proposition.actual_outcome_ids) == 0
+        ):
             continue
 
         # Calculate the score for the pick
-        global_percentage_picked = proposition.get_percentage_for_outcome(pick.outcome_picked_id)
+        global_percentage_picked = proposition.get_percentage_for_outcome(
+            pick.outcome_picked_id
+        )
         pick_score = 1 - global_percentage_picked
         if pick.outcome_picked_id not in proposition.actual_outcome_ids:
             # The pick is invalid

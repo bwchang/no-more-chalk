@@ -3,9 +3,11 @@ import requests
 from settings import CHALLENGE_ID, GROUP_ID, BASE_URL
 from challenge.entries import Entry, Pick
 
+
 def get_group_entries_url():
     """Returns the URL to fetch the group data for this challenge."""
     return f"{BASE_URL}/challenges/{CHALLENGE_ID}/groups/{GROUP_ID}"
+
 
 def get_group_entries():
     """Returns the group data for this challenge."""
@@ -15,6 +17,7 @@ def get_group_entries():
         print(f"An error occurred fetching data from ESPN: {e}")
         return {"success": False}
     return {"success": True, "data": get_entries_from_api_response(response)}
+
 
 def get_entries_from_api_response(api_response):
     """Returns a list of Entry objects from the API response."""
@@ -26,6 +29,7 @@ def get_entries_from_api_response(api_response):
         entry_picks = get_picks_from_entry(entry["picks"])
         entries.append(Entry(entry_id, entry_name, entry_username, entry_picks))
     return entries
+
 
 def get_picks_from_entry(api_response_picks):
     """Returns a list of Pick objects from the API response entry's picks."""

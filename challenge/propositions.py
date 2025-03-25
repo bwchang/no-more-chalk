@@ -1,5 +1,6 @@
 class Proposition:
     """Represents a matchup in the tournament."""
+
     def __init__(
         self,
         id,
@@ -29,10 +30,18 @@ class Proposition:
     def get_correct_outcome(self):
         if self.correct_outcome_id is None:
             return None
-        return [outcome for outcome in self.get_possible_outcomes() if outcome.id == self.correct_outcome_id][0]
+        return [
+            outcome
+            for outcome in self.get_possible_outcomes()
+            if outcome.id == self.correct_outcome_id
+        ][0]
 
     def get_percentage_for_outcome(self, outcome_id):
-        outcome = [outcome for outcome in self.get_possible_outcomes() if outcome.id == outcome_id][0]
+        outcome = [
+            outcome
+            for outcome in self.get_possible_outcomes()
+            if outcome.id == outcome_id
+        ][0]
         if outcome is None:
             return 0.0
         return outcome.percentage
@@ -46,8 +55,10 @@ class Proposition:
     def __repr__(self):
         return str(self)
 
+
 class PossibleOutcome:
     """Represents a possible outcome for a matchup."""
+
     def __init__(self, id, name, percentage):
         self.id = id
         self.name = name

@@ -3,9 +3,11 @@ import requests
 from settings import CHALLENGE_ID, BASE_URL
 from challenge.propositions import PossibleOutcome, Proposition
 
+
 def get_propositions_url():
     """Returns the URL to fetch the propositions for this challenge."""
     return f"{BASE_URL}/propositions"
+
 
 def get_propositions():
     params = {
@@ -17,6 +19,7 @@ def get_propositions():
         print(f"An error occurred fetching data from ESPN: {e}")
         return {"success": False}
     return {"success": True, "data": get_propositions_from_api_response(response)}
+
 
 def get_propositions_from_api_response(response):
     """Returns a list of Proposition objects from the API response."""
