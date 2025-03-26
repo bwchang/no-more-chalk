@@ -1,11 +1,12 @@
 class Entry:
     """Represents an entry by a user in the challenge."""
 
-    def __init__(self, id, name, username, picks):
+    def __init__(self, id, name, username, picks, score):
         self.id = id
         self.name = name
         self.username = username
         self.picks = picks
+        self.score = score
 
     def __str__(self):
         return self.name

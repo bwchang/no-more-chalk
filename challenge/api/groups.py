@@ -27,7 +27,8 @@ def get_entries_from_api_response(api_response):
         entry_name = entry["name"]
         entry_username = entry["member"]["displayName"]
         entry_picks = get_picks_from_entry(entry["picks"])
-        entries.append(Entry(entry_id, entry_name, entry_username, entry_picks))
+        entry_score = entry["score"]["overallScore"]
+        entries.append(Entry(entry_id, entry_name, entry_username, entry_picks, entry_score))
     return entries
 
 

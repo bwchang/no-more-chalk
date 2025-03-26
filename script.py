@@ -12,14 +12,15 @@ from settings import CHALLENGE_ID, GROUP_ID
 output_filename = "uniqueness_scores.csv"
 row_headers = [
     "Entry Name",
-    "Total Score (group)",
+    "Entry Score",
+    "Total UScore (group)",
     "R1 (group)",
     "R2 (group)",
     "R3 (group)",
     "R4 (group)",
     "R5 (group)",
     "R6 (group)",
-    "Total Score (global)",
+    "Total UScore (global)",
     "R1 (global)",
     "R2 (global)",
     "R3 (global)",
@@ -70,6 +71,7 @@ def run():
         output.append(
             [
                 entry.name,
+                entry.score,
                 round(sum(group_score.values()), 2),
                 group_score[1],
                 group_score[2],
